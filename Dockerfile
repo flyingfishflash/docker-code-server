@@ -25,9 +25,19 @@ RUN \
     git \
     jq \
     libatomic1 \
-    nano \
     net-tools \
     sudo && \
+  echo "**** install ansible  ****" && \
+    apt-get install -y software-properties-common && \
+    add-apt-repository --yes --update ppa:ansible/ansible && \
+    apt-get install -y ansible \
+    python3-pip && \
+    pip install ansible-lint && \
+    ansible-galaxy collection install kewlfft.aur && \
+  echo "**** install micro ****" && \
+   cd /usr/bin && \
+   curl https://getmic.ro | bash && \
+   cd && \
   echo "**** install code-server ****" && \
   if [ -z ${CODE_RELEASE+x} ]; then \
     CODE_RELEASE=$(curl -sX GET https://api.github.com/repos/coder/code-server/releases/latest \
@@ -54,7 +64,12 @@ RUN \
     /tmp/* \
     /var/lib/apt/lists/* \
     /var/tmp/* \
-    /etc/apt/sources.list.d/nodesource.list
+    /etc/apt/sources.list.d/nodesource.list && \
+  echo "**** install code-server extensions ****" && \
+   /app/code-server/bin/code-server --install-extension sainnhe.gruvbox-material \
+   --extensions-dir /config/extensions && \
+   /app/code-server/bin/code-server --install-extension redhat.ansible \
+   --extensions-dir /config/extensions
 
 # add local files
 COPY /root /
