@@ -1,0 +1,59 @@
+# drone secrets:
+# registry_mirror = http://registry-mirror.domain.tld
+# repository = registry.domain.tld/namespace/image-name
+# repository_development = registry.domain.tld/namespace/image-name
+# ssh_username
+# ssh_host_dev
+# ssh_host_prd
+# ssh_key
+
+kind: pipeline
+name: "publish"
+type: docker
+
+trigger:
+  event:
+    - push
+    - tag
+  ref:
+    - refs/heads/flyingfishflash
+    - refs/tags/*
+
+steps:
+  - name: fetch git tags
+    image: alpine/git
+    commands:
+      - git fetch --tags
+
+  - name: publish branch flyingfishflash
+    image: plugins/docker
+    depends_on:
+      - "fetch git tags"
+    settings:
+      auto_tag: false
+      cache_from:
+        from_secret: repository_development
+      tags: development
+      mirror:
+        from_secret: registry_mirror
+      repo:
+        from_secret: repository_development
+    when:
+      ref:
+        - refs/heads/flyingfishflash
+
+  - name: publish release
+    image: plugins/docker
+    depends_on:
+      - "fetch git tags"
+    settings:
+      auto_tag: false
+      cache_from:
+        from_secret: repository
+      mirror:
+        from_secret: registry_mirror
+      repo:
+        from_secret: repository
+    when:
+      ref:
+        - refs/tags/*-flyingfishflash
